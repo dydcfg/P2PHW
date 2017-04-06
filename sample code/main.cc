@@ -147,14 +147,14 @@ void NetSocket::rumor(QString origin, int rcvPort){
 	QVariantMap msgMap;
     QByteArray datagram;
 
-    msgMap.insert("ChatText", textline->text());
+    //msgMap.insert("ChatText", textline->text());
         
-    QDataStream out(&datagram, QIODevice::WriteOnly);
-    out << msgMap;
+    //QDataStream out(&datagram, QIODevice::WriteOnly);
+    //out << msgMap;
 
-    for (int p = socket->getPortMin(); p <= socket->getPortMax(); p++) {
-        socket->writeDatagram(datagram, QHostAddress::LocalHost, p);
-    }
+    //for (int p = socket->getPortMin(); p <= socket->getPortMax(); p++) {
+    //    socket->writeDatagram(datagram, QHostAddress::LocalHost, p);
+    //}
 
 
 }

@@ -25,7 +25,7 @@ public:
 
 private:
 	int myPortMin, myPortMax, myPort;
-	QMap<QString, QVector<QString>> messageDict;
+	QMap<QString, QVector<QString> > messageDict;
 	QMap<QString, int> seqDict;
 };
 
@@ -44,7 +44,6 @@ private:
 	QTextEdit *textview;
 	QLineEdit *textline;
 	NetSocket *socket;
-	GossipProtocol *gossip;
 };
 
 #endif // P2PAPP_MAIN_HH
