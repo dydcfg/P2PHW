@@ -12,21 +12,22 @@ class NetSocket : public QUdpSocket
 	Q_OBJECT
 
 public:
+	QString id;
 	NetSocket();
-
 	// Bind this socket to a P2Papp-specific default port.
 	bool bind();
-	
 	int getPortMax();
 	int getPortMin();
-
 	void rumor(QString origin, int rcvPort);
 	void status(int rcvPort);
+
+public slots:
+    void receiveDatagram();
 
 private:
 	int myPortMin, myPortMax, myPort;
 	QMap<QString, QVector<QString> > messageDict;
-	QMap<QString, int> seqDict;
+	QMap<QString, quint32> seqDict;
 };
 
 class ChatDialog : public QDialog

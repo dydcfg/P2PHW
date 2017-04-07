@@ -41,7 +41,7 @@ ChatDialog::ChatDialog()
 	connect(textline, SIGNAL(returnPressed()),
 		this, SLOT(gotReturnPressed()));
 	
-	connect(socket, SIGNAL(readyRead()), this, SLOT(receiveDatagram()));
+	connect(socket, SIGNAL(readyRead()), socket, SLOT(receiveDatagram()));
 }
 
 void ChatDialog::receiveDatagram()
@@ -76,18 +76,23 @@ void ChatDialog::gotReturnPressed()
 	// Insert some networking code here...
 	qDebug() << "FIX: send message to other peers: " << textline->text();
 	textview->append(textline->text());
-        
-        QVariantMap msgMap;
-        QByteArray datagram;
 
-        msgMap.insert("ChatText", textline->text());
+    if (!socket->seqDict.contain(socket->id)){
+    	socket->seqDict.insert(socket->id, 0);
+    	socket->messageDict.insert(new QVector<QString>());
+    }
         
-        QDataStream out(&datagram, QIODevice::WriteOnly);
-        out << msgMap;
+        //QVariantMap msgMap;
+        //QByteArray datagram;
 
-        for (int p = socket->getPortMin(); p <= socket->getPortMax(); p++) {
-        	socket->writeDatagram(datagram, QHostAddress::LocalHost, p);
-        }
+        //msgMap.insert("ChatText", textline->text());
+        
+        //QDataStream out(&datagram, QIODevice::WriteOnly);
+        //out << msgMap;
+
+        //for (int p = socket->getPortMin(); p <= socket->getPortMax(); p++) {
+        //	socket->writeDatagram(datagram, QHostAddress::LocalHost, p);
+        //}
         
 	// Clear the textline to get ready for the next input message.
 	textline->clear();
@@ -113,6 +118,8 @@ bool NetSocket::bind()
 		if (QUdpSocket::bind(p)) {
 			qDebug() << "bound to UDP port " << p;
 			myPort = p;
+			id = QString::number(qrand());
+	        id.append(QString::number(myPort));
 			return true;
 		}
 	}
@@ -144,24 +151,70 @@ void NetSocket::rumor(QString origin, int rcvPort){
 		}
 	}
 
+	if (rcvPort < myPortMin){
+		rcvPort = myPort + 1;
+	}
+	if (rcvPort > myPortMax){
+		rcvPort = myPort - 1;
+	}
+
+	rcvPort = myPort;
+
 	QVariantMap msgMap;
     QByteArray datagram;
 
-    //msgMap.insert("ChatText", textline->text());
-        
-    //QDataStream out(&datagram, QIODevice::WriteOnly);
-    //out << msgMap;
+    quint32 idx = seqDict[origin] - 1;
+    msgMap.insert("ChatText", messageDict[origin][idx]);
+    msgMap.insert("Origin", origin);
+    msgMap.insert("SeqNo", idx);
+    QDataStream out(&datagram, QIODevice::WriteOnly);
+    out << msgMap;
+
+    writeDatagram(datagram, QHostAddress::LocalHost, rcvPort);
 
     //for (int p = socket->getPortMin(); p <= socket->getPortMax(); p++) {
     //    socket->writeDatagram(datagram, QHostAddress::LocalHost, p);
     //}
-
 
 }
 
 void NetSocket::status(int rcvPort){
 
 }
+
+void NetSocket::receiveDatagram()
+{
+	QByteArray datagram;
+	datagram.resize(pendingDatagramSize());
+
+	QHostAddress sender;
+	quint16 senderPort;
+	
+	readDatagram(datagram.data(), datagram.size(), &sender, &senderPort);
+	QDataStream in(&datagram, QIODevice::ReadOnly);
+
+    QVariantMap msgMap;
+	in >> msgMap;
+
+    
+    //Status
+    if (msgMap.contain("Want")){
+
+    }
+    //Rumor
+    else{
+	    qDebug() << msgMap["ChatText"];
+	    QString txt = msgMap["ChatText"].toString();
+	    QString origin = msgMap["Origin"].toString();
+	    quint32 seqNum = msgMap["SeqNo"].toUInt();
+	    qDebug() << "Message from: " << sender.toString();
+	    qDebug() << "Seq: " << seqNum;
+	    qDebug() << "Message port: " << senderPort;
+
+	}
+	//textview->append(txt);
+}
+
 
 
 int main(int argc, char **argv)
