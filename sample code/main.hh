@@ -5,6 +5,7 @@
 #include <QTextEdit>
 #include <QLineEdit>
 #include <QUdpSocket>
+#include <QTimer>
 
 
 class NetSocket : public QUdpSocket
@@ -12,22 +13,21 @@ class NetSocket : public QUdpSocket
 	Q_OBJECT
 
 public:
-	QString id;
+	QString id, lastOrigin;
+        quint32 lastIdx;
+        int lastPort;
+        int isRumoring;
 	NetSocket();
 	// Bind this socket to a P2Papp-specific default port.
 	bool bind();
 	int getPortMax();
 	int getPortMin();
-	void rumor(QString origin, int rcvPort);
+	void rumor(QString origin, quint32 idx,  int rcvPort);
 	void status(int rcvPort);
-
-public slots:
-    void receiveDatagram();
-
-private:
 	int myPortMin, myPortMax, myPort;
 	QMap<QString, QVector<QString> > messageDict;
-	QMap<QString, quint32> seqDict;
+	QMap<QString, QVariant> seqDict;
+
 };
 
 class ChatDialog : public QDialog
@@ -40,11 +40,14 @@ public:
 public slots:
 	void gotReturnPressed();
 	void receiveDatagram();
+        void rumorTimeout();
+        void entropyTimeout();
 
 private:
 	QTextEdit *textview;
 	QLineEdit *textline;
 	NetSocket *socket;
+        QTimer *rumorTimer, *antiEntropyTimer;
 };
 
 #endif // P2PAPP_MAIN_HH
