@@ -246,7 +246,7 @@ NetSocket::NetSocket()
 	// (which are quite possible).
 	// We use the range from 32768 to 49151 for this purpose.
 	myPortMin = 32768 + (getuid() % 4096)*4;
-	myPortMax = myPortMin + 2;
+	myPortMax = myPortMin + 1024;
         lastPort = 0;
         isRumoring = 0;
 }
